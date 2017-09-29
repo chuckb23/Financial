@@ -17,16 +17,16 @@ import com.financial.utils.FinancialHelper;
 import com.financial.utils.FinancialsSQLHelper;
 
 public class StockIngest {
-	CloseableHttpClient httpclient = HttpClients.createDefault();
-	String apiQ = "_1Z4h9WjsswNztTb41zg";
-	String apiKey = "ea3af990d47f88bd8ae48b5dade5f9b3";
-	String getMarket = "http://marketdata.websol.barchart.com/getHistory.json?key=<APIKey>&symbol=BRS&type=daily&startDate=20150313000000";
+	private CloseableHttpClient httpclient = HttpClients.createDefault();
+	private String apiQ = "_1Z4h9WjsswNztTb41zg";
+	private String apiKey = "ea3af990d47f88bd8ae48b5dade5f9b3";
+	//private String getMarket = "http://marketdata.websol.barchart.com/getHistory.json?key=<APIKey>&symbol=BRS&type=daily&startDate=20150313000000";
 	// String getMarket =
-	//String getMarket = "http://marketdata.websol.barchart.com/getHistory.json?key=<APIKey>&symbol=<Symbol>&type=daily&startDate=<StartDate>";
+	String getMarket = "http://marketdata.websol.barchart.com/getHistory.json?key=<APIKey>&symbol=<Symbol>&type=daily&startDate=<StartDate>";
 	// Configure this
-	SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
-	FinancialHelper fp = new FinancialHelper();
-	FinancialsSQLHelper fsh = new FinancialsSQLHelper();
+	private SimpleDateFormat sdf = new SimpleDateFormat("YYYY-MM-dd");
+	private FinancialHelper fp = new FinancialHelper();
+	private FinancialsSQLHelper fsh = new FinancialsSQLHelper();
 
 	public StockIngest() {
 		getQuote();
@@ -39,24 +39,17 @@ public class StockIngest {
 
 	//Does not work
 	public StockIngest(String[] symbols, String startDate) {
-		getMarket.replace("<StartDate>", startDate);
+		getMarket = getMarket.replace("<StartDate>", startDate);
 		for(int i = 0; i< symbols.length; i++){
-			getMarket.replace("<Symbol>", symbols[i]);
+			getMarket = getMarket.replace("<Symbol>", symbols[i]);
 			getQuote();
 		}
-		// 
 	}
 	
 	private void setUrl(String symbol, String startDate){
-		getMarket.replace("<Symbol>", symbol);
-		getMarket.replace("<StartDate>", startDate);
+		getMarket = getMarket.replace("<Symbol>", symbol).replace("<StartDate>", startDate);
 	}
 
-	public static void main(String[] args) {
-		StockApplication sa = new StockApplication();
-		StockDaily[] sd = sa.getDailyStock("IBM");
-		StockIngest st = new StockIngest();
-	}
 
 	private void getQuote() {
 		String stringResponse = fp.getResponseFromUrl(getMarket.replace("<APIKey>", apiKey));
@@ -68,10 +61,13 @@ public class StockIngest {
 				parseStock(stock);
 			}
 		} catch (Exception e) {
+			System.out.println("Failure to insert fill quote for <STOCK>");
 			e.printStackTrace();
 		}
 	}
-
+	
+	/* Parse the provided Json Object provided and 
+	 * insert the dailyStock*/
 	private void parseStock(JSONObject stock) {
 		String symbol = stock.getString("symbol");
 		double close = stock.getDouble("close");

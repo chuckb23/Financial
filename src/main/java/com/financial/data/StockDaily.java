@@ -19,6 +19,7 @@ public class StockDaily extends Object {
 	public double getClose() {
 		return close;
 	}
+	
 	public void setClose(double close) {
 		this.close = close;
 	}
@@ -47,4 +48,9 @@ public class StockDaily extends Object {
 		this.percentChange = percentChange; 
 	}
 	
+	@Override
+	public String toString() {
+		return "StockDaily [symbol=" + symbol + ", price=" + price + ", open=" + open + ", close=" + close
+				+ ", percentChange=" + percentChange + ", tradingDay=" + tradingDay + "]";
+	}
 }

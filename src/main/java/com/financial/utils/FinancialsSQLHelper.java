@@ -9,6 +9,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 
+import com.financial.data.Stock;
 import com.financial.data.StockDaily;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -32,6 +33,21 @@ public class FinancialsSQLHelper {
 	    return conn;
 	  }
 	
+	
+	public static ResultSet getResultSet(String query){
+		Connection conn;
+		ResultSet rs = null;
+		try {
+			conn = getConnection();
+			CallableStatement cs = conn.prepareCall(query);
+			rs = cs.executeQuery();
+			//conn.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return rs; 
+	}
+	
 	public static ResultSet getResultSet(String query, String symbol){
 		Connection conn;
 		ResultSet rs = null;
@@ -40,7 +56,6 @@ public class FinancialsSQLHelper {
 			CallableStatement cs = conn.prepareCall(query);
 			cs.setString(1, symbol);
 			rs = cs.executeQuery();
-			//conn.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -80,24 +95,28 @@ public class FinancialsSQLHelper {
 		
 	}
 	
-	/*public Stock getStocks(){
+	public ArrayList<Stock> getStocks(){
+		ArrayList<Stock> stockList = null;
 		try {
-			Connection conn = getConnection();
-			String query = "CALL spGetStocks()";
-			CallableStatement cs = conn.prepareCall(query);
-			ResultSet rs = cs.executeQuery();
+			stockList = new ArrayList<Stock>();
+			ResultSet rs = getResultSet("CALL spGetStocks()");
 			while(rs.next()){
-				rs.getString(1);
+				Stock stock = new Stock();
+				stock.setStockSymbol(rs.getString(1));
+				stock.setCountryId(rs.getInt(2));
+				stockList.add(stock);
 			}
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return stockList;
 		
-	}*/
+	}
 	
-	public StockDaily[] getDailyStock(String symbol){
-		//getDailyStockMongo(symbol);
+	/*
+	 * Returns all historical DailyStocksPrices in db for the given symbol
+	 */
+	public StockDaily[] getAllDailyStockPrices(String symbol){
 		ResultSet rs = getResultSet("CALL spGetStockDaily(?)",symbol);
 		try{
 			//need to either switch to a list or get rows 
@@ -120,6 +139,7 @@ public class FinancialsSQLHelper {
 		return null;
 	}
 	
+	/*Simple framework not in use*/
 	public StockDaily[] getDailyStockMongo(String symbol){
 		try {
 			MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://localhost:27017"));
@@ -127,12 +147,8 @@ public class FinancialsSQLHelper {
 			DBCollection collection = database.getCollection("dailyStockPrice");
 			DBObject query = new BasicDBObject("item", "BRS");
 			DBCursor cursor = collection.find(query);
-			//DBObject cursor = collection.findOne();
-			//System.out.println(cursor);
 			double price = (double)cursor.next().get("price");
-			System.out.println(price);
 		} catch (Exception e) {
-			//System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
 		return null;
